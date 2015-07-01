@@ -39,50 +39,43 @@ import org.jboss.dmr.ValueExpression;
  * @author <a href="jcordes@redhat.com">Jochen Cordes</a>
  */
 public class ZooKeeperServerDefinition extends SimpleResourceDefinition {
-	
-	public static final ZooKeeperServerDefinition INSTANCE = new ZooKeeperServerDefinition();
-	
-	
-	public static final SimpleAttributeDefinition SOCKET_BINDING = new SimpleAttributeDefinitionBuilder(
+
+    public static final SimpleAttributeDefinition SOCKET_BINDING = new SimpleAttributeDefinitionBuilder(
             ZooKeeperExtension.SOCKET_BINDING, ModelType.STRING).setAllowExpression(true)
-	        .setXmlName(ZooKeeperExtension.SOCKET_BINDING)
-	        .setFlags(AttributeAccess.Flag.RESTART_NONE)
+            .setXmlName(ZooKeeperExtension.SOCKET_BINDING)
+            .setFlags(AttributeAccess.Flag.RESTART_NONE)
             .setDefaultValue(new ModelNode().set(ZooKeeperExtension.BINDING_NAME)).setAllowNull(true).build();
 
-	// we define attribute named tick
-	protected static final SimpleAttributeDefinition TICK_TIME = new SimpleAttributeDefinitionBuilder(
-			ZooKeeperExtension.TICK_TIME, ModelType.LONG).setAllowExpression(true)
-			.setXmlName(ZooKeeperExtension.TICK_TIME)
-			.setFlags(AttributeAccess.Flag.RESTART_NONE)
-			.setDefaultValue(new ModelNode(2000)).setAllowNull(true).build();
+    // we define attribute named tick
+    protected static final SimpleAttributeDefinition TICK_TIME = new SimpleAttributeDefinitionBuilder(ZooKeeperExtension.TICK_TIME, ModelType.LONG)
+            .setAllowExpression(true)
+            .setXmlName(ZooKeeperExtension.TICK_TIME)
+            .setFlags(AttributeAccess.Flag.RESTART_NONE)
+            .setDefaultValue(new ModelNode(2000))
+            .setAllowNull(true).build();
 
-	// we define attribute named dataDir
-	protected static final SimpleAttributeDefinition DATA_DIR = new SimpleAttributeDefinitionBuilder(
-			ZooKeeperExtension.DATA_DIR, ModelType.STRING)
-			.setAllowExpression(true).setXmlName(ZooKeeperExtension.DATA_DIR)
-			.setFlags(AttributeAccess.Flag.RESTART_NONE)
-			.setDefaultValue(new ModelNode(new ValueExpression("${jboss.server.data.dir}/zookeeper")))
-			.setAllowNull(true).build();
-	
-	static final List<SimpleAttributeDefinition> ZOOKEEPER_ATTRIBUTES = Arrays.asList(SOCKET_BINDING, TICK_TIME, DATA_DIR);
+    // we define attribute named dataDir
+    protected static final SimpleAttributeDefinition DATA_DIR = new SimpleAttributeDefinitionBuilder(
+            ZooKeeperExtension.DATA_DIR, ModelType.STRING)
+            .setAllowExpression(true)
+            .setFlags(AttributeAccess.Flag.RESTART_NONE)
+            .setDefaultValue(new ModelNode(new ValueExpression("${jboss.server.data.dir}/zookeeper")))
+            .setAllowNull(true).build();
 
-	private ZooKeeperServerDefinition() {
-		super(ZooKeeperExtension.SERVER_PATH, ZooKeeperExtension
-				.getResourceDescriptionResolver());
-	}
+    static final List<SimpleAttributeDefinition> ZOOKEEPER_ATTRIBUTES = Arrays.asList(SOCKET_BINDING, TICK_TIME, DATA_DIR);
 
-	@Override
-	public void registerOperations(
-			ManagementResourceRegistration resourceRegistration) {
-		resourceRegistration.registerOperationHandler(ZooKeeperServerAdd.DEFINITION, ZooKeeperServerAdd.INSTANCE);
-		resourceRegistration.registerOperationHandler(ZooKeeperServerRemove.DEFINITION, ZooKeeperServerRemove.INSTANCE);
-	}
+    public static final ZooKeeperServerDefinition INSTANCE = new ZooKeeperServerDefinition();
 
-	@Override
-	public void registerAttributes(
-			ManagementResourceRegistration resourceRegistration) {
-		for (SimpleAttributeDefinition attr : ZooKeeperServerDefinition.ZOOKEEPER_ATTRIBUTES) {
+    private ZooKeeperServerDefinition() {
+        super(ZooKeeperExtension.SERVER_PATH, ZooKeeperExtension.getResourceDescriptionResolver(),
+                ZooKeeperServerAdd.INSTANCE, ZooKeeperServerRemove.INSTANCE
+        );
+    }
+
+    @Override
+    public void registerAttributes(ManagementResourceRegistration resourceRegistration) {
+        for (SimpleAttributeDefinition attr : ZooKeeperServerDefinition.ZOOKEEPER_ATTRIBUTES) {
             resourceRegistration.registerReadWriteAttribute(attr, null, new ReloadRequiredWriteAttributeHandler(attr));
         }
-	}
+    }
 }

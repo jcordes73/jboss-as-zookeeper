@@ -42,115 +42,115 @@ import org.jboss.msc.value.InjectedValue;
  */
 public class ZooKeeperService implements Service<ZooKeeperServer> {
 
-	private final Logger log = Logger.getLogger(ZooKeeperService.class);
+    private final Logger log = Logger.getLogger(ZooKeeperService.class);
 
-	public static final ServiceName SERVICE_NAME = ServiceName.JBOSS.append("zookeeper");
-	
-	private final InjectedValue<ExecutorService> executor = new InjectedValue<ExecutorService>();
-	private final InjectedValue<SocketBinding> binding = new InjectedValue<SocketBinding>();
-	    
-	private long tickTime = 2000;
-	private String dataDir = "${jboss.server.data.dir}/zookeeper";
+    public static final ServiceName SERVICE_NAME = ServiceName.JBOSS.append("zookeeper");
 
-	private ZooKeeperServer zooKeeperServer = null;
+    private final InjectedValue<ExecutorService> executor = new InjectedValue<ExecutorService>();
+    private final InjectedValue<SocketBinding> binding = new InjectedValue<SocketBinding>();
 
-	public ZooKeeperService(long tickTime, String dataDir) {
-		this.tickTime = tickTime;
-		this.dataDir = dataDir;
-	}
+    private long tickTime = 2000;
+    private String dataDir = "${jboss.server.data.dir}/zookeeper";
 
-	@Override
-	public ZooKeeperServer getValue() throws IllegalStateException,
-			IllegalArgumentException {
-		return zooKeeperServer;
-	}
+    private ZooKeeperServer zooKeeperServer = null;
 
-	@Override
-	public synchronized void start(final StartContext context) throws StartException {
-		File dir = new File(dataDir).getAbsoluteFile();
+    public ZooKeeperService(long tickTime, String dataDir) {
+        this.tickTime = tickTime;
+        this.dataDir = dataDir;
+    }
 
-		try {
-			zooKeeperServer = new ZooKeeperServer(dir, dir, (int) tickTime);
-		
-			ServerCnxnFactory serverCnxnFactory = ServerCnxnFactory.createFactory(binding.getValue().getSocketAddress(), 5);
-			zooKeeperServer.setServerCnxnFactory(serverCnxnFactory);
-			
-			context.asynchronous();
-			executor.getValue().execute(new ZooKeeperServerRunner(zooKeeperServer, context));
-		} catch (IOException e) {
-			context.failed(new StartException(e));
-		}
-	}
+    @Override
+    public ZooKeeperServer getValue() throws IllegalStateException,
+            IllegalArgumentException {
+        return zooKeeperServer;
+    }
 
-	@Override
-	public synchronized void stop(final StopContext context) {
-		context.asynchronous();
-		executor.getValue().execute(new ZooKeeperServerDestroyer(zooKeeperServer, context));
-	}
+    @Override
+    public synchronized void start(final StartContext context) throws StartException {
+        File dir = new File(dataDir).getAbsoluteFile();
 
-	public void setTickTime(long tickTime) {
-		this.tickTime = tickTime;
-	}
+        try {
+            zooKeeperServer = new ZooKeeperServer(dir, dir, (int) tickTime);
 
-	public void setDataDir(String dataDir) {
-		this.dataDir = dataDir;
-	}
-		
-	public InjectedValue<SocketBinding> getBinding() {
-		return binding;
-	}
-	
-	public InjectedValue<ExecutorService> getExecutor() {
+            ServerCnxnFactory serverCnxnFactory = ServerCnxnFactory.createFactory(binding.getValue().getSocketAddress(), 5);
+            zooKeeperServer.setServerCnxnFactory(serverCnxnFactory);
+
+            context.asynchronous();
+            executor.getValue().execute(new ZooKeeperServerRunner(zooKeeperServer, context));
+        } catch (IOException e) {
+            context.failed(new StartException(e));
+        }
+    }
+
+    @Override
+    public synchronized void stop(final StopContext context) {
+        context.asynchronous();
+        executor.getValue().execute(new ZooKeeperServerDestroyer(zooKeeperServer, context));
+    }
+
+    public void setTickTime(long tickTime) {
+        this.tickTime = tickTime;
+    }
+
+    public void setDataDir(String dataDir) {
+        this.dataDir = dataDir;
+    }
+
+    public InjectedValue<SocketBinding> getBinding() {
+        return binding;
+    }
+
+    public InjectedValue<ExecutorService> getExecutor() {
         return executor;
     }
-	
-	class ZooKeeperServerRunner implements Runnable {
 
-		private ZooKeeperServer zooKeeperServer;
-		private StartContext startContext;
-		
-		public ZooKeeperServerRunner(ZooKeeperServer zookeeperServer, StartContext startContext){
-			this.zooKeeperServer = zookeeperServer;
-			this.startContext = startContext;
-		}
-		
-		@Override
-		public void run() {
-			try {
-				zooKeeperServer.startup();
-				zooKeeperServer.getServerCnxnFactory().start();
-				startContext.complete();
-				log.info("Zookeeper started at " + binding.getValue().getSocketAddress());
-			} catch (Throwable e) {
-				startContext.failed(new StartException(e));
-				log.error("Zookeeper failed to start at " + binding.getValue().getSocketAddress());
-			}
-			
-		}
-	}
-	
-	class ZooKeeperServerDestroyer implements Runnable {
+    class ZooKeeperServerRunner implements Runnable {
 
-		private ZooKeeperServer zooKeeperServer;
-		private StopContext stopContext;
-		
-		public ZooKeeperServerDestroyer(ZooKeeperServer zookeeperServer, StopContext stopContext){
-			this.zooKeeperServer = zookeeperServer;
-			this.stopContext = stopContext;
-		}
-		
-		@Override
-		public void run() {
-			try {
-			  zooKeeperServer.getServerCnxnFactory().closeSession(tickTime);
-			  zooKeeperServer.getServerCnxnFactory().closeAll();
-			  zooKeeperServer.getServerCnxnFactory().shutdown();
-			  zooKeeperServer.shutdown();
-			} finally {
-			  stopContext.complete();
-			}
-			
-			log.info("Zookeeper stopped");
-		}
-	}
+        private ZooKeeperServer zooKeeperServer;
+        private StartContext startContext;
+
+        public ZooKeeperServerRunner(ZooKeeperServer zookeeperServer, StartContext startContext) {
+            this.zooKeeperServer = zookeeperServer;
+            this.startContext = startContext;
+        }
+
+        @Override
+        public void run() {
+            try {
+                zooKeeperServer.startup();
+                zooKeeperServer.getServerCnxnFactory().start();
+                startContext.complete();
+                log.info("Zookeeper started at " + binding.getValue().getSocketAddress());
+            } catch (Throwable e) {
+                startContext.failed(new StartException(e));
+                log.error("Zookeeper failed to start at " + binding.getValue().getSocketAddress());
+            }
+
+        }
+    }
+
+    class ZooKeeperServerDestroyer implements Runnable {
+
+        private ZooKeeperServer zooKeeperServer;
+        private StopContext stopContext;
+
+        public ZooKeeperServerDestroyer(ZooKeeperServer zookeeperServer, StopContext stopContext) {
+            this.zooKeeperServer = zookeeperServer;
+            this.stopContext = stopContext;
+        }
+
+        @Override
+        public void run() {
+            try {
+                zooKeeperServer.getServerCnxnFactory().closeSession(tickTime);
+                zooKeeperServer.getServerCnxnFactory().closeAll();
+                zooKeeperServer.getServerCnxnFactory().shutdown();
+                zooKeeperServer.shutdown();
+            } finally {
+                stopContext.complete();
+            }
+
+            log.info("Zookeeper stopped");
+        }
+    }
 }

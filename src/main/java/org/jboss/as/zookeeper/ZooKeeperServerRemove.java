@@ -22,34 +22,25 @@
 
 package org.jboss.as.zookeeper;
 
-import org.jboss.as.controller.AbstractRemoveStepHandler;
-import org.jboss.as.controller.OperationContext;
-import org.jboss.as.controller.OperationDefinition;
-import org.jboss.as.controller.OperationFailedException;
-import org.jboss.as.controller.SimpleOperationDefinitionBuilder;
-import org.jboss.as.controller.registry.OperationEntry;
-import org.jboss.dmr.ModelNode;
-import org.jboss.dmr.ModelType;
+import org.jboss.as.controller.ServiceRemoveStepHandler;
+import org.jboss.msc.service.ServiceName;
 
 /**
  * @author <a href="jcordes@redhat.com">Jochen Cordes</a>
  */
-public class ZooKeeperServerRemove extends AbstractRemoveStepHandler {
-	 
-	static final OperationDefinition DEFINITION = new SimpleOperationDefinitionBuilder("remove",
-            ZooKeeperExtension.getResourceDescriptionResolver())
-            .setReplyType(ModelType.BOOLEAN)
-            .withFlag(OperationEntry.Flag.RUNTIME_ONLY)
-            .build();
-	
+public class ZooKeeperServerRemove extends ServiceRemoveStepHandler {
+
     public static final ZooKeeperServerRemove INSTANCE = new ZooKeeperServerRemove();
- 
+
     private ZooKeeperServerRemove() {
+        super(ZooKeeperService.SERVICE_NAME, ZooKeeperServerAdd.INSTANCE);
     }
- 
- 
+
+
     @Override
-    protected void performRuntime(OperationContext context, ModelNode operation, ModelNode model) throws OperationFailedException {
-    	 context.removeService(ZooKeeperService.SERVICE_NAME);
-    } 
+    protected ServiceName serviceName(String name) {
+        return ZooKeeperService.SERVICE_NAME;
+    }
+
+
 }
