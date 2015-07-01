@@ -24,7 +24,7 @@ package org.jboss.as.zookeeper;
 
 import java.util.List;
 
-import org.jboss.as.controller.AbstractBoottimeAddStepHandler;
+import org.jboss.as.controller.AbstractAddStepHandler;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationDefinition;
 import org.jboss.as.controller.OperationFailedException;
@@ -41,12 +41,12 @@ import org.jboss.msc.service.ServiceController;
  *
  * @author <a href="jcordes@redhat.com">Jochen Cordes</a>
  */
-class ZooKeeperSubsystemAdd extends AbstractBoottimeAddStepHandler {
+class ZooKeeperSubsystemAdd extends AbstractAddStepHandler {
 	
 	static final OperationDefinition DEFINITION = new SimpleOperationDefinitionBuilder("add",
             ZooKeeperExtension.getResourceDescriptionResolver())
             .setReplyType(ModelType.BOOLEAN)
-            .withFlag(OperationEntry.Flag.RESTART_RESOURCE_SERVICES)
+            .withFlag(OperationEntry.Flag.RESTART_NONE)
             .build();
 	
 	static final ZooKeeperSubsystemAdd INSTANCE = new ZooKeeperSubsystemAdd();
@@ -66,14 +66,14 @@ class ZooKeeperSubsystemAdd extends AbstractBoottimeAddStepHandler {
 
 	/** {@inheritDoc} */
 	@Override
-	public void performBoottime(OperationContext context, ModelNode operation,
+	public void performRuntime(OperationContext context, ModelNode operation,
 			final ModelNode model,
 			final ServiceVerificationHandler verificationHandler,
 			final List<ServiceController<?>> newControllers)
 			throws OperationFailedException {
-		log.info("performBoottime start");
+		log.info("performRuntime start");
 		
-		log.info("performBoottime end");
+		log.info("performRuntime end");
 	}
 	
 }

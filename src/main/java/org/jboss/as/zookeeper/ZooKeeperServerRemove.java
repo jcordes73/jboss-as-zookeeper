@@ -50,6 +50,6 @@ public class ZooKeeperServerRemove extends AbstractRemoveStepHandler {
  
     @Override
     protected void performRuntime(OperationContext context, ModelNode operation, ModelNode model) throws OperationFailedException {
-        context.removeService(ZooKeeperService.SERVICE_NAME);
+    	 context.removeService(ZooKeeperService.SERVICE_NAME);
     } 
 }

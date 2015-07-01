@@ -34,6 +34,8 @@ import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.SimpleOperationDefinitionBuilder;
 import org.jboss.as.controller.registry.OperationEntry;
 import org.jboss.as.network.SocketBinding;
+import org.jboss.as.network.SocketBindingManager;
+import org.jboss.as.network.SocketBindingManagerImpl;
 import org.jboss.as.server.Services;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
@@ -42,6 +44,7 @@ import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceController.Mode;
+import org.jboss.msc.value.InjectedValue;
 
 /**
  * Handler responsible for adding the subsystem resource to the model
@@ -70,10 +73,18 @@ class ZooKeeperServerAdd extends AbstractAddStepHandler {
 	protected void populateModel(ModelNode operation, ModelNode model)
 			throws OperationFailedException {
 		log.info("Populating the model");
-		ZooKeeperServerDefinition.SOCKET_BINDING.validateAndSet(operation,
-				model);
-		ZooKeeperServerDefinition.DATA_DIR.validateAndSet(operation, model);
-		ZooKeeperServerDefinition.TICK_TIME.validateAndSet(operation, model);
+		
+		for (final SimpleAttributeDefinition attribute : ZooKeeperServerDefinition.ZOOKEEPER_ATTRIBUTES) {
+			if (operation.get(attribute.getName()).isDefined()) {
+				attribute.validateAndSet(operation, model);
+			} else {
+				ModelNode modelAttrNode = model.get(attribute.getName());
+				ModelNode defaultValue = attribute.getDefaultValue();
+				if (defaultValue != null) {
+					modelAttrNode.set(defaultValue);
+				}
+			}
+		}
 	}
 
 	/** {@inheritDoc} */
@@ -86,41 +97,37 @@ class ZooKeeperServerAdd extends AbstractAddStepHandler {
 
 		log.info("performRuntime start");
 
-		for (final SimpleAttributeDefinition attribute : ZooKeeperServerDefinition.ZOOKEEPER_ATTRIBUTES) {
-			if (operation.get(attribute.getName()).isDefined()) {
-				attribute.validateAndSet(operation, model);
-			} else {
-				ModelNode modelAttrNode = model.get(attribute.getName());
-				ModelNode defaultValue = attribute.getDefaultValue();
-				if (defaultValue != null) {
-					modelAttrNode.set(defaultValue);
-				}
-			}
-		}
-
 		final long tick = ZooKeeperServerDefinition.TICK_TIME
 				.resolveModelAttribute(context, model).asLong();
 		final String dataDir = ZooKeeperServerDefinition.DATA_DIR
+				.resolveModelAttribute(context, model).resolve().asString();
+		final String socketBinding = ZooKeeperServerDefinition.SOCKET_BINDING
 				.resolveModelAttribute(context, model).resolve().asString();
 
 		ZooKeeperService service = new ZooKeeperService(tick, dataDir);
 
 		final ServiceBuilder<ZooKeeperServer> builder = context
-				.getServiceTarget()
-				.addService(ZooKeeperService.SERVICE_NAME, service)
-				.addDependency(
-						DependencyType.REQUIRED,
-						SocketBinding.JBOSS_BINDING_NAME
-								.append(ZooKeeperExtension.BINDING_NAME),
-						SocketBinding.class, service.getBinding());
-		builder.setInitialMode(Mode.ACTIVE);
+				.getServiceTarget().addService(ZooKeeperService.SERVICE_NAME,
+						service);
+
+		if (verificationHandler != null) {
+			builder.addListener(verificationHandler);
+		}
+
+		builder.addDependency(SocketBindingManagerImpl.SOCKET_BINDING_MANAGER, SocketBindingManager.class, service.getBindingManager());
+		
+		builder.addDependency(DependencyType.REQUIRED,
+				SocketBinding.JBOSS_BINDING_NAME
+						.append(socketBinding),
+				SocketBinding.class, service.getBinding());
 
 		Services.addServerExecutorDependency(builder, service.getExecutor(),
 				false);
 
-    	builder.addListener(verificationHandler);
-
-		newControllers.add(builder.install());
+		ServiceController<?> controller = builder.install();
+        if (newControllers != null) {
+            newControllers.add(controller);
+        }
 
 		log.info("performRuntime end");
 	}

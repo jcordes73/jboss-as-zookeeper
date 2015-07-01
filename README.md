@@ -26,5 +26,4 @@ $JBOSS_HOME/bin/jboss-cli.sh -c
 /extension=org.jboss.as.zookeeper:add(module=org.jboss.as.zookeeper)
 /socket-binding-group=standard-sockets/socket-binding=zookeeper:add(port=2181)
 /subsystem=zookeeper:add
-reload
 /subsystem=zookeeper/server=default:add
