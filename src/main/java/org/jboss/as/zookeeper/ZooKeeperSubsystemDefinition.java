@@ -22,28 +22,18 @@
 
 package org.jboss.as.zookeeper;
 
+import org.jboss.as.controller.ReloadRequiredRemoveStepHandler;
 import org.jboss.as.controller.SimpleResourceDefinition;
-import org.jboss.as.controller.registry.ManagementResourceRegistration;
 
 public class ZooKeeperSubsystemDefinition extends SimpleResourceDefinition {
-	
-		public static final ZooKeeperSubsystemDefinition INSTANCE = new ZooKeeperSubsystemDefinition();
-		
-		
-		private ZooKeeperSubsystemDefinition() {
-			super(ZooKeeperExtension.SUBSYSTEM_PATH, ZooKeeperExtension
-					.getResourceDescriptionResolver());
-		}
 
-		@Override
-		public void registerOperations(
-				ManagementResourceRegistration resourceRegistration) {
-			resourceRegistration.registerOperationHandler(ZooKeeperSubsystemAdd.DEFINITION, ZooKeeperSubsystemAdd.INSTANCE);
-			resourceRegistration.registerOperationHandler(ZooKeeperSubsystemRemove.DEFINITION, ZooKeeperSubsystemRemove.INSTANCE);
-		}
+    public static final ZooKeeperSubsystemDefinition INSTANCE = new ZooKeeperSubsystemDefinition();
 
-		@Override
-		public void registerAttributes(
-				ManagementResourceRegistration resourceRegistration) {
-		}
+
+    private ZooKeeperSubsystemDefinition() {
+        super(ZooKeeperExtension.SUBSYSTEM_PATH, ZooKeeperExtension.getResourceDescriptionResolver(),
+                ZooKeeperSubsystemAdd.INSTANCE, ReloadRequiredRemoveStepHandler.INSTANCE);
+    }
+
+
 }

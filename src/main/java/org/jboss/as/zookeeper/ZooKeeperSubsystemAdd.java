@@ -26,13 +26,9 @@ import java.util.List;
 
 import org.jboss.as.controller.AbstractAddStepHandler;
 import org.jboss.as.controller.OperationContext;
-import org.jboss.as.controller.OperationDefinition;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.ServiceVerificationHandler;
-import org.jboss.as.controller.SimpleOperationDefinitionBuilder;
-import org.jboss.as.controller.registry.OperationEntry;
 import org.jboss.dmr.ModelNode;
-import org.jboss.dmr.ModelType;
 import org.jboss.logging.Logger;
 import org.jboss.msc.service.ServiceController;
 
@@ -42,38 +38,27 @@ import org.jboss.msc.service.ServiceController;
  * @author <a href="jcordes@redhat.com">Jochen Cordes</a>
  */
 class ZooKeeperSubsystemAdd extends AbstractAddStepHandler {
-	
-	static final OperationDefinition DEFINITION = new SimpleOperationDefinitionBuilder("add",
-            ZooKeeperExtension.getResourceDescriptionResolver())
-            .setReplyType(ModelType.BOOLEAN)
-            .withFlag(OperationEntry.Flag.RESTART_NONE)
-            .build();
-	
-	static final ZooKeeperSubsystemAdd INSTANCE = new ZooKeeperSubsystemAdd();
 
-	private final Logger log = Logger.getLogger(ZooKeeperSubsystemAdd.class);
 
-	private ZooKeeperSubsystemAdd() {
-	}
+    static final ZooKeeperSubsystemAdd INSTANCE = new ZooKeeperSubsystemAdd();
 
-	/** {@inheritDoc} */
-	@Override
-	protected void populateModel(ModelNode operation, ModelNode model)
-			throws OperationFailedException {
-		log.info("Populating the model");
-		model.setEmptyObject();
-	}
+    private final Logger log = Logger.getLogger(ZooKeeperSubsystemAdd.class);
 
-	/** {@inheritDoc} */
-	@Override
-	public void performRuntime(OperationContext context, ModelNode operation,
-			final ModelNode model,
-			final ServiceVerificationHandler verificationHandler,
-			final List<ServiceController<?>> newControllers)
-			throws OperationFailedException {
-		log.info("performRuntime start");
-		
-		log.info("performRuntime end");
-	}
-	
+    private ZooKeeperSubsystemAdd() {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void performRuntime(OperationContext context, ModelNode operation,
+                               final ModelNode model,
+                               final ServiceVerificationHandler verificationHandler,
+                               final List<ServiceController<?>> newControllers)
+            throws OperationFailedException {
+        log.info("performRuntime start");
+
+        log.info("performRuntime end");
+    }
+
 }
