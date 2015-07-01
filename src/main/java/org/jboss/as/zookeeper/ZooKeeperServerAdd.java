@@ -29,13 +29,12 @@ import org.jboss.as.controller.AbstractAddStepHandler;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationDefinition;
 import org.jboss.as.controller.OperationFailedException;
+import org.jboss.as.controller.OperationStepHandler;
 import org.jboss.as.controller.ServiceVerificationHandler;
 import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.SimpleOperationDefinitionBuilder;
 import org.jboss.as.controller.registry.OperationEntry;
 import org.jboss.as.network.SocketBinding;
-import org.jboss.as.network.SocketBindingManager;
-import org.jboss.as.network.SocketBindingManagerImpl;
 import org.jboss.as.server.Services;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
@@ -43,8 +42,6 @@ import org.jboss.logging.Logger;
 import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.service.ServiceController;
-import org.jboss.msc.service.ServiceController.Mode;
-import org.jboss.msc.value.InjectedValue;
 
 /**
  * Handler responsible for adding the subsystem resource to the model
@@ -73,7 +70,7 @@ class ZooKeeperServerAdd extends AbstractAddStepHandler {
 	protected void populateModel(ModelNode operation, ModelNode model)
 			throws OperationFailedException {
 		log.info("Populating the model");
-		
+
 		for (final SimpleAttributeDefinition attribute : ZooKeeperServerDefinition.ZOOKEEPER_ATTRIBUTES) {
 			if (operation.get(attribute.getName()).isDefined()) {
 				attribute.validateAndSet(operation, model);
@@ -97,12 +94,32 @@ class ZooKeeperServerAdd extends AbstractAddStepHandler {
 
 		log.info("performRuntime start");
 
+		// This needs to run after all child resources so that they can detect a
+		// fresh state
+		context.addStep(new OperationStepHandler() {
+			@Override
+			public void execute(OperationContext context, ModelNode operation)
+					throws OperationFailedException {
+				launchServices(context, model, verificationHandler,
+						newControllers);
+				context.completeStep(OperationContext.ResultHandler.NOOP_RESULT_HANDLER);
+			}
+		}, OperationContext.Stage.RUNTIME);
+
+		log.info("performRuntime end");
+	}
+
+	protected void launchServices(final OperationContext context,
+			final ModelNode model,
+			final ServiceVerificationHandler verificationHandler,
+			final List<ServiceController<?>> newControllers)
+			throws OperationFailedException {
 		final long tick = ZooKeeperServerDefinition.TICK_TIME
 				.resolveModelAttribute(context, model).asLong();
 		final String dataDir = ZooKeeperServerDefinition.DATA_DIR
-				.resolveModelAttribute(context, model).resolve().asString();
+				.resolveModelAttribute(context, model).asString();
 		final String socketBinding = ZooKeeperServerDefinition.SOCKET_BINDING
-				.resolveModelAttribute(context, model).resolve().asString();
+				.resolveModelAttribute(context, model).asString();
 
 		ZooKeeperService service = new ZooKeeperService(tick, dataDir);
 
@@ -114,21 +131,16 @@ class ZooKeeperServerAdd extends AbstractAddStepHandler {
 			builder.addListener(verificationHandler);
 		}
 
-		builder.addDependency(SocketBindingManagerImpl.SOCKET_BINDING_MANAGER, SocketBindingManager.class, service.getBindingManager());
-		
 		builder.addDependency(DependencyType.REQUIRED,
-				SocketBinding.JBOSS_BINDING_NAME
-						.append(socketBinding),
+				SocketBinding.JBOSS_BINDING_NAME.append(socketBinding),
 				SocketBinding.class, service.getBinding());
 
 		Services.addServerExecutorDependency(builder, service.getExecutor(),
 				false);
 
 		ServiceController<?> controller = builder.install();
-        if (newControllers != null) {
-            newControllers.add(controller);
-        }
-
-		log.info("performRuntime end");
+		if (newControllers != null) {
+			newControllers.add(controller);
+		}
 	}
 }

@@ -29,7 +29,6 @@ import java.util.concurrent.ExecutorService;
 import org.apache.zookeeper.server.ServerCnxnFactory;
 import org.apache.zookeeper.server.ZooKeeperServer;
 import org.jboss.as.network.SocketBinding;
-import org.jboss.as.network.SocketBindingManager;
 import org.jboss.logging.Logger;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceName;
@@ -48,7 +47,6 @@ public class ZooKeeperService implements Service<ZooKeeperServer> {
 	public static final ServiceName SERVICE_NAME = ServiceName.JBOSS.append("zookeeper");
 	
 	private final InjectedValue<ExecutorService> executor = new InjectedValue<ExecutorService>();
-	private final InjectedValue<SocketBindingManager> bindingManager = new InjectedValue<SocketBindingManager>();
 	private final InjectedValue<SocketBinding> binding = new InjectedValue<SocketBinding>();
 	    
 	private long tickTime = 2000;
@@ -97,11 +95,7 @@ public class ZooKeeperService implements Service<ZooKeeperServer> {
 	public void setDataDir(String dataDir) {
 		this.dataDir = dataDir;
 	}
-	
-	public InjectedValue<SocketBindingManager> getBindingManager() {
-		return bindingManager;
-	}
-	
+		
 	public InjectedValue<SocketBinding> getBinding() {
 		return binding;
 	}
