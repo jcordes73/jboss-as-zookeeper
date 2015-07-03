@@ -30,3 +30,39 @@ Via the JBoss CLI you can now go on and configure the subsystem
 /socket-binding-group=standard-sockets/socket-binding=zookeeper:add(port=2181)
 /subsystem=zookeeper:add
 /subsystem=zookeeper/server=default:add```
+
+
+For SASL authentication I added the following security-domain to the security subsystem:
+
+```xml
+<security-domain name="zookeeper" cache-type="default">
+  <authentication>
+    <login-module code="UsersRoles" flag="required">
+      <module-option name="unauthenticatedIdentity" value="super"/>
+      <module-option name="usersProperties" value="file://${jboss.server.config.dir}/zookeeper-users.properties"/>
+      <module-option name="rolesProperties" value="file://${jboss.server.config.dir}/zookeeper-roles.properties"/>
+    </login-module>
+  </authentication>
+</security-domain>
+```
+
+```
+java -cp target/dependencies/zookeeper-3.4.5.jar:$JBOSS_HOME/modules/system/layers/base/org/slf4j/main/slf4j-api-1.7.2.redhat-3.jar org.apache.zookeeper.server.auth.DigestAuthenticationProvider user:password
+SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+user:password->user:tpUq/4Pn5A64fVZyQ0gOJ8ZWqkY=
+```
+
+See https://cwiki.apache.org/confluence/display/ZOOKEEPER/Zookeeper+and+SASL 
+
+$JBOSS_HOME/standalone/configuration/zookeeper-users.properties 
+```
+user_super=87ac910e3c04f81fb0449c614bfa6bd6
+user_guest=zrwGGHoYa1x7P/8qXdr90ox6SC8=
+```
+
+$JBOSS_HOME/standalone/configuration/zookeeper-roles.properties 
+```
+super=super
+```

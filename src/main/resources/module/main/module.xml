@@ -2,7 +2,7 @@
     <resources>
         <resource-root path="jboss-as-zookeeper-1.0-SNAPSHOT.jar"/>
         <resource-root path="zookeeper-3.4.5.jar"/>
-        <resource-root path="jmxri-1.2.1.jar"/>
+        <!-- <resource-root path="jmxri-1.2.1.jar"/> -->
     </resources>
     
     <dependencies>
@@ -16,5 +16,8 @@
         <module name="org.jboss.vfs"/>
         <module name="org.jboss.as.network"/>
         <module name="org.slf4j"/>
+        <module name="org.jboss.log4j.logmanager"/>
+        <module name="org.jboss.as.security"/>
+        <module name="org.picketbox"/>
     </dependencies>
 </module>

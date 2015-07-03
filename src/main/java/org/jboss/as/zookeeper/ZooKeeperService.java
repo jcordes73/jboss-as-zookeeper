@@ -70,8 +70,11 @@ public class ZooKeeperService implements Service<ZooKeeperServer> {
         File dir = new File(dataDir).getAbsoluteFile();
 
         try {
+        	System.setProperty("zookeeper.sasl.serverconfig", "zookeeper");
+        	System.setProperty("zookeeper.SASLAuthenticationProvider.superPassword", "redhat2015!");
+        	System.setProperty("zookeeper.sasl.client", "false");
+        	
             zooKeeperServer = new ZooKeeperServer(dir, dir, (int) tickTime);
-
             ServerCnxnFactory serverCnxnFactory = ServerCnxnFactory.createFactory(binding.getValue().getSocketAddress(), 5);
             zooKeeperServer.setServerCnxnFactory(serverCnxnFactory);
 
